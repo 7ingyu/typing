@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import TextArea from './styling/TextArea.jsx';
 
-const App = () => {
+export default () => {
   const [timer, setTimer] = useState('10');
   const [timeDisplay, setTimeDisplay] = useState(timer);
   const [btnText, setBtnText] = useState('Start');
@@ -40,10 +41,8 @@ const App = () => {
   return (
     <div>
       <div role="timer">Seconds Remaining: {timeDisplay}</div>
-      <textarea
+      <TextArea
         id="typingarea"
-        rows="10"
-        cols="100"
         autoFocus
         placeholder="Type here!"
         spellCheck="false"
@@ -52,5 +51,3 @@ const App = () => {
     </div>
   );
 };
-
-export default App;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import CopyText from './CopyText.jsx';
-import Timer from './styling/Timer.jsx';
+import Analysis from './Analysis.jsx';
 import TextArea from './styling/TextArea.jsx';
 
 import axios from 'axios';
@@ -16,7 +16,7 @@ export default class App extends React.Component {
       wordCount: 0,
       timeStarted: false,
       reset: true,
-      finished: true,
+      finished: false,
       startTime: 0,
       endTime: 0,
       errorCount: 0,
@@ -43,6 +43,9 @@ export default class App extends React.Component {
       return true;
     }
     if (this.state.stopwatch !== nextState.stopwatch) {
+      return true;
+    }
+    if (this.state.finished !== nextState.finished) {
       return true;
     }
     return false;
@@ -73,11 +76,16 @@ export default class App extends React.Component {
   }
 
   startCounter() {
-    let timeElapsed = 0;
-
+    let timeAtStart = Math.floor(Date.now() / 1000);
     let counter = setInterval(this.timeIncrement, 1000);
 
-    this.setState({counter: counter});
+    this.setState({
+      counter: counter,
+      finished: false,
+      reset: true,
+      timeStarted: true,
+      startTime: timeAtStart
+    });
   }
 
   timeIncrement() {
@@ -123,11 +131,6 @@ export default class App extends React.Component {
     // Start stopwatch
     if (!this.state.timeStarted) {
       console.log('starting stopwatch');
-      let timeAtStart = Math.floor(Date.now() / 1000);
-      this.setState({
-        timeStarted: true,
-        startTime: timeAtStart
-      });
       this.startCounter();
     }
   }
@@ -172,6 +175,11 @@ export default class App extends React.Component {
         placeholder="Type here!"
         spellCheck="false"
         onChange={ event => this.handleTyping(event) } />
+      {this.state.finished ? <Analysis
+        timeElapsed={this.state.timeElapsed}
+        wordCount={this.state.wordCount}
+        copyText={this.state.copyText}
+        errorCount={this.state.errorCount}/> : null}
     </>
     );
   }

@@ -11,6 +11,7 @@ export default () => {
   const [timerStarted, setTimerStarted] = useState(false);
   const [typedText, setTypedText] = useState('');
   const [copyText, setCopyText] = useState({});
+  const [reset, setReset] = useState(true);
   const [finished, setFinished] = useState(false);
   const url = 'http://localhost:1234'
   var countdown;
@@ -29,6 +30,7 @@ export default () => {
   const handleTyping = (event) => {
 
     setTypedText(event.target.value);
+    setReset(false);
 
     // Start stopwatch
     if (stopwatch === '0:00' && event.target.value !== '') {
@@ -36,13 +38,13 @@ export default () => {
       let timeElapsed = 0;
       setStartTime(Date.now());
       countdown = setInterval(() => {
-        if (event.target.value !== '' || !finished) {
+        if (event.target.value !== '' && !finished) {
           timeElapsed++;
           let minutes = Math.floor(timeElapsed / 60);
           let seconds = timeElapsed - (minutes * 60);
           let time = `${minutes}:${seconds < 10 ? '0' + seconds: seconds}`
           setStopwatch(time);
-        } else {
+        } else if (finished) {
           event.target.disabled = true;
           clearInterval(countdown);
           setEndTime(Date.now());
@@ -50,8 +52,10 @@ export default () => {
           let time = `${Math.floor(timeElapsed / 60)}:${timeElapsed - (Math.floor(timeElapsed / 60) * 60)}`
           setStopwatch(time);
           timeElapsed = 0;
-
           // Add saving to db of score
+        } else if (reset) {
+          clearInterval(countdown);
+          timeElapsed = 0;
         }
       }, 1000);
     }
@@ -64,6 +68,7 @@ export default () => {
     textbox.focus();
     setStopwatch('0:00');
     setTimerStarted(false);
+    setReset(true);
   };
 
   const createMarkup = () => {

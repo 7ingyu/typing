@@ -3,7 +3,7 @@ import React from 'react';
 // Implement a new best feature!
 export default ({ timeElapsed, wordCount, copyText, errorCount }) => {
 
-  let wpm = wordCount / (timeElapsed / 60);
+  let wpm = Math.round(wordCount / (timeElapsed / 60));
   let errorRate = Math.round(errorCount / copyText.length * 100);
 
   return (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import CopyText from './CopyText.jsx';
-import Analysis from './Analysis.jsx';
+import CopyText from './components/CopyText.jsx';
+import Analysis from './components/Analysis.jsx';
 import TextArea from './styling/TextArea.jsx';
 
 import axios from 'axios';
@@ -58,6 +58,7 @@ export default class App extends React.Component {
       .get(`${url}/copy`)
       .then( res => {
         let string = res.data.slice(3, -5);
+        string = string.trim();
         let count = string.split(' ').length;
         let textbox = document.getElementById('typingarea');
         textbox.value = '';
@@ -136,10 +137,14 @@ export default class App extends React.Component {
   }
 
   handleReset() {
-    getText();
+    this.getText();
     clearInterval(this.state.counter);
     this.setState({
-      reset: true
+      reset: true,
+      stopwatch: '0:00',
+      timeElapsed: 0,
+      finished: false,
+      timeStarted: false,
     })
   };
 

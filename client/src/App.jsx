@@ -5,106 +5,174 @@ import TextArea from './styling/TextArea.jsx';
 
 import axios from 'axios';
 
-export default () => {
-  const [stopwatch, setStopwatch] = useState('0:00');
-  const [startTime, setStartTime] = useState(0);
-  const [endTime, setEndTime] = useState(Infinity);
-  const [typedText, setTypedText] = useState('');
-  const [copyText, setCopyText] = useState('');
-  const [wordCount, setWordCount] = useState('');
-  const [reset, setReset] = useState(true);
-  const [errorCount, setErrorCount] = useState(0);
-  const [finished, setFinished] = useState(false);
-  const url = 'http://localhost:1234'
-  var countdown;
+export default class App extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      timeElapsed: 0,
+      stopwatch: '0:00',
+      typedText: '',
+      copyText: '',
+      wordCount: 0,
+      timeStarted: false,
+      reset: true,
+      finished: true,
+      startTime: 0,
+      endTime: 0,
+      errorCount: 0,
+      counter: undefined,
+    }
+    this.getText = this.getText.bind(this);
+    this.startCounter = this.startCounter.bind(this);
+    this.timeIncrement = this.timeIncrement.bind(this);
+    this.endGame = this.endGame.bind(this);
+    this.handleTyping = this.handleTyping.bind(this);
+    this.handleReset = this.handleReset.bind(this);
+    this.handleErrors = this.handleErrors.bind(this);
+  }
 
-  const getText = () => {
+  componentDidMount() {
+    this.getText();
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    if (this.state.copyText !== nextState.copyText) {
+      return true;
+    }
+    if (this.state.typedText !== nextState.typedText) {
+      return true;
+    }
+    if (this.state.stopwatch !== nextState.stopwatch) {
+      return true;
+    }
+    return false;
+  }
+
+  getText() {
+    const url = 'http://localhost:1234';
+
     axios
       .get(`${url}/copy`)
       .then( res => {
         let string = res.data.slice(3, -5);
         let count = string.split(' ').length;
-        setCopyText(string);
-        setWordCount(count);
+        let textbox = document.getElementById('typingarea');
+        textbox.value = '';
+        textbox.disabled = false;
+        textbox.focus();
+        this.setState({
+          typedText: '',
+          stopwatch: '0:00',
+          copyText: string,
+          wordCount: count
+        });
       })
       .catch( err => {
         console.log(err);
       });
-  };
+  }
 
-  const handleTyping = (event) => {
+  startCounter() {
+    let timeElapsed = 0;
 
-    setTypedText(event.target.value);
-    setReset(false);
+    let counter = setInterval(this.timeIncrement, 1000);
 
-    // End Game
-    if (typedText.length >= copyText.length) {
-      setEndTime(Date.now());
-      setFinished(true);
-      let textbox = document.getElementById('typingarea');
-      textbox.disabled = true;
-      // Focus to restart btn
-      // Post results to db
+    this.setState({counter: counter});
+  }
+
+  timeIncrement() {
+    let timeElapsed = this.state.timeElapsed + 1;
+    let minutes = Math.floor(timeElapsed / 60);
+    let seconds = timeElapsed - (minutes * 60);
+    let time = `${minutes}:${seconds < 10 ? '0' + seconds: seconds}`
+    this.setState({
+      timeElapsed: timeElapsed,
+      stopwatch: time
+    })
+  }
+
+  endGame() {
+    clearInterval(this.state.counter);
+    let timeAtEnd = Math.floor(Date.now() / 1000);
+    let textbox = document.getElementById('typingarea');
+    textbox.disabled = true;
+    let timeElapsed = timeAtEnd - this.state.startTime;
+    let minutes = Math.floor(timeElapsed / 60);
+    let seconds = timeElapsed - (minutes * 60);
+    let time = `${minutes}:${seconds < 10 ? '0' + seconds: seconds}`
+    console.log('time elapsed:', time);
+    this.setState({
+      timeElapsed: timeElapsed,
+      endTime: timeAtEnd,
+      finished: true,
+      stopwatch: time
+    });
+  }
+
+  handleTyping = (event) => {
+
+    this.setState({
+      typedText: event.target.value,
+      reset: false
+    })
+
+    if (this.state.typedText.length >= this.state.copyText.length) {
+      this.endGame();
     }
 
     // Start stopwatch
-    if (stopwatch === '0:00' && event.target.value !== '') {
-      let timeElapsed = 0;
-      setStartTime(Date.now());
-      countdown = setInterval(() => {
-        if (event.target.value !== '' && !finished) {
-          timeElapsed++;
-          let minutes = Math.floor(timeElapsed / 60);
-          let seconds = timeElapsed - (minutes * 60);
-          let time = `${minutes}:${seconds < 10 ? '0' + seconds: seconds}`
-          setStopwatch(time);
-        } else if (finished || reset) {
-          clearInterval(countdown);
-        }
-      }, 1000);
+    if (!this.state.timeStarted) {
+      console.log('starting stopwatch');
+      let timeAtStart = Math.floor(Date.now() / 1000);
+      this.setState({
+        timeStarted: true,
+        startTime: timeAtStart
+      });
+      this.startCounter();
     }
-  };
-
-  const handleReset = () => {
-    let textbox = document.getElementById('typingarea');
-    textbox.value = '';
-    textbox.disabled = false;
-    textbox.focus();
-    setStopwatch('0:00');
-    setFinished(false);
-    setReset(true);
-  };
-
-  const handleErrors = (errors) => {
-    setErrorCount(errors);
   }
 
-  useEffect(() => {
+  handleReset() {
     getText();
-  }, []);
+    clearInterval(this.state.counter);
+    this.setState({
+      reset: true
+    })
+  };
 
-  const timer = {
-    display: 'grid',
-    gridTemplateColumns: '[timer] 20% [button] 10%',
-    margin: '5px 0px'
+  handleErrors = (errors) => {
+    this.setState({
+      errorCount: errors
+    });
   }
 
-  return (
-    <>
-      {copyText.length > 0 ? <CopyText
-        copy={copyText}
-        input={typedText}
-        handleErrors={handleErrors}/>: null}
+  render() {
+
+    const timer = {
+      display: 'grid',
+      gridTemplateColumns: '[timer] 20% [button] 10%',
+      margin: '5px 0px'
+    }
+
+    return (
+      <>
+      {this.state.copyText.length > 0 ? <CopyText
+        copy={this.state.copyText}
+        input={this.state.typedText}
+        handleErrors={this.handleErrors}/>: null}
       <div style={timer}>
-        <div role="timer">Time Elapsed: <span>{stopwatch}</span></div>
-        {stopwatch !== '0:00' ? <button onClick={handleReset}>Restart</button>: null}
+        <div role="timer">Time Elapsed: <span>{this.state.stopwatch}</span></div>
+        {this.state.stopwatch !== '0:00' ? <button onClick={this.handleReset}>Restart</button>: null}
         </div>
       <TextArea
         id="typingarea"
         contenteditable
         autoFocus
+        disabled
         placeholder="Type here!"
-        onChange={ event => handleTyping(event) } />
+        spellCheck="false"
+        onChange={ event => this.handleTyping(event) } />
     </>
-  );
-};
+    );
+  }
+}

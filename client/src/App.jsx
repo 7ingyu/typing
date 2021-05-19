@@ -110,6 +110,7 @@ export default class App extends React.Component {
     let seconds = timeElapsed - (minutes * 60);
     let time = `${minutes}:${seconds < 10 ? '0' + seconds: seconds}`
     console.log('time elapsed:', time);
+    document.getElementById('restart').focus();
     this.setState({
       timeElapsed: timeElapsed,
       endTime: timeAtEnd,
@@ -170,7 +171,7 @@ export default class App extends React.Component {
         handleErrors={this.handleErrors}/>: null}
       <div style={timer}>
         <div role="timer">Time Elapsed: <span>{this.state.stopwatch}</span></div>
-        {this.state.stopwatch !== '0:00' ? <button onClick={this.handleReset}>Restart</button>: null}
+        {this.state.stopwatch !== '0:00' ? <button id="restart" onClick={this.handleReset}>Restart</button>: null}
         </div>
       <TextArea
         id="typingarea"

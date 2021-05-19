@@ -14,10 +14,10 @@ app.use(express.static(path.join(__dirname, '..', 'client', 'dist')));
 app.use(bodyParser.json());
 
 app.get('/copy', async (req, res) => {
-  let min = parseInt(req.query.minutes);
+  // let min = parseInt(req.query.minutes);
 
   try {
-    let list = await axios.get(`http://www.randomtext.me/api/gibberish/p-${min * 2}/100-150/`);
+    let list = await axios.get(`http://www.randomtext.me/api/gibberish/p-3/100-150/`);
     res.send(list.data['text_out']);
   } catch (err) {
     console.log(err);

@@ -4,20 +4,21 @@ import Timer from './styling/Timer.jsx';
 import axios from 'axios';
 
 export default () => {
-  const [timer, setTimer] = useState(30);
-  const [timeDisplay, setTimeDisplay] = useState(timer);
-  const [btnText, setBtnText] = useState('Start');
+  const [stopwatch, setStopwatch] = useState('0:00');
+  const [startTime, setStartTime] = useState(0);
+  const [endTime, setEndTime] = useState(Infinity);
+  const [btnText, setBtnText] = useState('Reset');
   const [timerStarted, setTimerStarted] = useState(false);
   const [typedText, setTypedText] = useState('');
   const [copyText, setCopyText] = useState({});
+  const [finished, setFinished] = useState(false);
   const url = 'http://localhost:1234'
   var countdown;
 
   const getText = () => {
     axios
-      .get(`${url}/copy`, {params: {minutes: Math.ceil(timer/60)}})
+      .get(`${url}/copy`)
       .then( res => {
-        // let text = {__html: res.data};
         setCopyText(res.data);
       })
       .catch( err => {
@@ -25,49 +26,44 @@ export default () => {
       });
   };
 
-  const handleTimerChange = () => {
-    const min = document.getElementById('minutes').value;
-    const sec = document.getElementById('seconds').value;
-
-    if (Math.ceil(timer / 60) !== Math.ceil((min * 60) + sec)) {
-      getText();
-    }
-
-    setTimer((min * 60) + sec);
-  };
-
   const handleTyping = (event) => {
 
     setTypedText(event.target.value);
 
-    if (timer > 0 && timerStarted === false) {
+    // Start stopwatch
+    if (stopwatch === '0:00' && event.target.value !== '') {
       setTimerStarted(true);
-      let timeLeft = timer
+      let timeElapsed = 0;
+      setStartTime(Date.now());
       countdown = setInterval(() => {
-        console.log(timeLeft);
-        if (timeLeft > 0) {
-
-          var date = new Date(0);
-          date.setSeconds(45); // specify value for SECONDS here
-          var timeString = date.toISOString().substr(11, 8);
-
-          console.log(timeString)
-          setTimeDisplay(--timeLeft);
+        if (event.target.value !== '' || !finished) {
+          timeElapsed++;
+          let minutes = Math.floor(timeElapsed / 60);
+          let seconds = timeElapsed - (minutes * 60);
+          let time = `${minutes}:${seconds < 10 ? '0' + seconds: seconds}`
+          setStopwatch(time);
         } else {
           event.target.disabled = true;
           clearInterval(countdown);
+          setEndTime(Date.now());
+          timeElapsed = (endTime - startTime) / 1000; // convert to seconds
+          let time = `${Math.floor(timeElapsed / 60)}:${timeElapsed - (Math.floor(timeElapsed / 60) * 60)}`
+          setStopwatch(time);
+          timeElapsed = 0;
+
+          // Add saving to db of score
         }
       }, 1000);
     }
   };
 
   const handleReset = () => {
-    setTimeDisplay(timer);
-    setTimerStarted(false);
     let textbox = document.getElementById('typingarea');
     textbox.value = '';
     textbox.disabled = false;
     textbox.focus();
+    setStopwatch('0:00');
+    setTimerStarted(false);
   };
 
   const createMarkup = () => {
@@ -79,28 +75,16 @@ export default () => {
   }, []);
 
   return (
-    <div>
-      Timer: <Timer
-        id="minutes"
-        type="number"
-        max="15"
-        defaultValue="0"
-        onChange={handleTimerChange}/>:
-      <Timer
-        id="seconds"
-        type="number"
-        max="59"
-        defaultValue="30"
-        onChange={handleTimerChange}/><br/>
+    <>
       <div id="copytext" dangerouslySetInnerHTML={createMarkup()}></div>
-      <div role="timer">Time Remaining: {timeDisplay}</div>
+      <div role="timer">Time Elapsed: {stopwatch}</div>
       <TextArea
         id="typingarea"
         autoFocus
         placeholder="Type here!"
         spellCheck="false"
         onChange={ event => handleTyping(event) } />
-      {timeDisplay <= 0 ? <button autoFocus onClick={handleReset}>Restart</button>: null}
-    </div>
+      {stopwatch !== '0:00' ? <button onClick={handleReset}>Restart</button>: null}
+    </>
   );
 };

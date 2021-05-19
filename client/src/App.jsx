@@ -10,7 +10,7 @@ export default () => {
   const [btnText, setBtnText] = useState('Reset');
   const [timerStarted, setTimerStarted] = useState(false);
   const [typedText, setTypedText] = useState('');
-  const [copyText, setCopyText] = useState({});
+  const [copyText, setCopyText] = useState('');
   const [reset, setReset] = useState(true);
   const [finished, setFinished] = useState(false);
   const url = 'http://localhost:1234'
@@ -20,7 +20,8 @@ export default () => {
     axios
       .get(`${url}/copy`)
       .then( res => {
-        setCopyText(res.data);
+        let string = res.data.slice(3, -4);
+        setCopyText(string);
       })
       .catch( err => {
         console.log(err);
@@ -71,25 +72,32 @@ export default () => {
     setReset(true);
   };
 
-  const createMarkup = () => {
-    return {__html: copyText};
-  }
-
   useEffect(() => {
     getText();
   }, []);
 
+  const timer = {
+    display: 'grid',
+    gridTemplateColumns: '[timer] 20% [button] 10%',
+    margin: '5px 0px'
+  }
+
+  const restart = {
+  }
+
   return (
     <>
-      <div id="copytext" dangerouslySetInnerHTML={createMarkup()}></div>
-      <div role="timer">Time Elapsed: {stopwatch}</div>
+      <div id="copytext"><p>{copyText}</p></div>
+      <div style={timer}>
+        <div role="timer">Time Elapsed: <span>{stopwatch}</span></div>
+        {stopwatch !== '0:00' ? <button onClick={handleReset}>Restart</button>: null}
+        </div>
       <TextArea
         id="typingarea"
+        contenteditable
         autoFocus
         placeholder="Type here!"
-        spellCheck="false"
         onChange={ event => handleTyping(event) } />
-      {stopwatch !== '0:00' ? <button onClick={handleReset}>Restart</button>: null}
     </>
   );
 };

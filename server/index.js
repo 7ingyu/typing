@@ -17,7 +17,7 @@ app.get('/copy', async (req, res) => {
   // let min = parseInt(req.query.minutes);
 
   try {
-    let list = await axios.get(`http://www.randomtext.me/api/gibberish/p-3/100-150/`);
+    let list = await axios.get(`http://www.randomtext.me/api/gibberish/p-1/50-100/`);
     res.send(list.data['text_out']);
   } catch (err) {
     console.log(err);

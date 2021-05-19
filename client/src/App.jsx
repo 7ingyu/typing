@@ -9,6 +9,7 @@ export default class App extends React.Component {
   constructor() {
     super();
     this.state = {
+      httpError: false,
       timeElapsed: 0,
       stopwatch: '0:00',
       typedText: '',
@@ -55,7 +56,7 @@ export default class App extends React.Component {
     const url = 'http://localhost:1234';
 
     axios
-      .get(`${url}/copy`)
+      .get(`${url}/copy`, { timeout: 10000 })
       .then( res => {
         let string = res.data.slice(3, -5);
         string = string.trim();
@@ -73,6 +74,10 @@ export default class App extends React.Component {
       })
       .catch( err => {
         console.log(err);
+        this.setState({
+          copyText: 'Writer is apparently suffering from writers\' block. Please check back later.',
+          httpError: true
+        });
       });
   }
 
@@ -138,6 +143,9 @@ export default class App extends React.Component {
   }
 
   handleReset() {
+    this.setState({
+      copyText: ''
+    })
     this.getText();
     clearInterval(this.state.counter);
     this.setState({
@@ -149,10 +157,14 @@ export default class App extends React.Component {
     })
   };
 
-  handleErrors = (errors) => {
+  handleErrors(errors) {
     this.setState({
       errorCount: errors
     });
+  }
+
+  handleRefresh() {
+    window.location.reload();
   }
 
   render() {
@@ -163,15 +175,18 @@ export default class App extends React.Component {
       margin: '5px 0px'
     }
 
+    const loadingText = ['Generating text', 'Writing copy', 'Inventing lies', 'Wrangling letters', 'Rearranging alphabets', 'Selecting characters', 'Exploring dictionaries']
+
     return (
       <>
       {this.state.copyText.length > 0 ? <CopyText
         copy={this.state.copyText}
         input={this.state.typedText}
-        handleErrors={this.handleErrors}/>: null}
+        handleErrors={this.handleErrors}/>: <div className="loading">...{loadingText[Math.floor(Math.random() * loadingText.length)]}...</div>}
+      {this.state.httpError ? <button id="refresh" onClick={this.handleRefresh}>Try again?</button>: null}
       <div style={timer}>
         <div role="timer">Time Elapsed: <span>{this.state.stopwatch}</span></div>
-        {this.state.stopwatch !== '0:00' ? <button id="restart" onClick={this.handleReset}>Restart</button>: null}
+        {this.state.stopwatch !== '0:00' ? <button id="restart" onClick={this.handleRefresh}>Restart</button>: null}
         </div>
       <TextArea
         id="typingarea"

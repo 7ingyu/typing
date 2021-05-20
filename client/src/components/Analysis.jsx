@@ -1,15 +1,16 @@
 import React from 'react';
 
 // Implement a new best feature!
-export default ({ timeElapsed, wordCount, copyText, errorCount }) => {
+export default ({ timeElapsed, wpm, copyText, errorCount, bestScore }) => {
 
-  let wpm = Math.round(wordCount / (timeElapsed / 60));
-  let errorRate = Math.round(errorCount / copyText.length * 100);
+  let errorRate = errorCount === 1 ? 0: Math.ceil(errorCount / copyText.length * 100);
 
   return (
     <div id="analysis">
+      {wpm > bestScore ? <span style={{fontWeight: 'bold'}}>NEW HIGH SCORE! Those fingers are greased lightning!</span>: null}
       Words Per Minute: {wpm} <br/>
-      Error Rate: {`${errorRate}%`}
+      Error Rate: {`${errorRate}%`} <br/>
+      {errorCount === 0 ? <span style={{fontWeight: 'bold'}}>NOT A SINGLE MISTAKE!! SUCH DEXTERITY!!!</span>: null}
     </div>
   )
 }

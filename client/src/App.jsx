@@ -9,6 +9,9 @@ export default class App extends React.Component {
   constructor() {
     super();
     this.state = {
+      userId: undefined,
+      login: undefined,
+      history: [],
       httpError: false,
       timeElapsed: 0,
       stopwatch: '0:00',
@@ -22,18 +25,17 @@ export default class App extends React.Component {
       endTime: 0,
       errorCount: 0,
       counter: undefined,
+      bestScore: 0,
+      wpm: 0,
     }
     this.getText = this.getText.bind(this);
     this.startCounter = this.startCounter.bind(this);
     this.timeIncrement = this.timeIncrement.bind(this);
     this.endGame = this.endGame.bind(this);
+    this.handleLogin = this.handleLogin.bind(this);
     this.handleTyping = this.handleTyping.bind(this);
     this.handleReset = this.handleReset.bind(this);
     this.handleErrors = this.handleErrors.bind(this);
-  }
-
-  componentDidMount() {
-    this.getText();
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -58,9 +60,12 @@ export default class App extends React.Component {
     axios
       .get(`${url}/copy`, { timeout: 10000 })
       .then( res => {
-        let string = res.data.slice(3, -5);
+
+        let string = res.data.replace(/<\/p>/g, '\n');
+        string = string.replace(/<p>/g, '');
         string = string.trim();
         let count = string.split(' ').length;
+
         let textbox = document.getElementById('typingarea');
         textbox.value = '';
         textbox.disabled = false;
@@ -116,12 +121,56 @@ export default class App extends React.Component {
     let time = `${minutes}:${seconds < 10 ? '0' + seconds: seconds}`
     console.log('time elapsed:', time);
     document.getElementById('restart').focus();
+    let wpm = Math.round(wordCount / (timeElapsed / 60));
+
+    let scoreData = {
+      wpm: wpm,
+      wordCount: this.state.wordCount,
+      startTime: this.state.startTime,
+      endTime: this.state.endTime,
+      errorCount: this.state.errorCount,
+      timeElapsed: this.state.timeElapsed,
+    };
+    if (userId !== undefined) {
+      axios.post(`/${this.state.userId}`, scoreData);
+    }
+    let newHistory = this.state.history;
+    newHistory.push(scoreData);
+
     this.setState({
+      wpm: wpm,
       timeElapsed: timeElapsed,
       endTime: timeAtEnd,
       finished: true,
-      stopwatch: time
+      stopwatch: time,
+      bestScore: wpm > this.state.bestScore? wpm: this.state.bestScore,
+      history: newHistory
     });
+  }
+
+  handleLogin = (userData) => {
+    if (userData.login) {
+      axios
+        .get(`${userData.email}`)
+        .then((res) => {
+          this.setState({
+            login: true,
+            userId: userData.id,
+            history: res.data.history,
+          })
+        })
+        .then(() => {
+          this.getText();
+        })
+        .catch((err) => {
+          console.log(err);
+          // Print an error message and make them login again
+        });
+    } else {
+      this.setState({
+        login: false
+      })
+    }
   }
 
   handleTyping = (event) => {
@@ -177,31 +226,36 @@ export default class App extends React.Component {
 
     const loadingText = ['Generating text', 'Writing copy', 'Inventing lies', 'Wrangling letters', 'Rearranging alphabets', 'Selecting characters', 'Exploring dictionaries']
 
-    return (
-      <>
-      {this.state.copyText.length > 0 ? <CopyText
-        copy={this.state.copyText}
-        input={this.state.typedText}
-        handleErrors={this.handleErrors}/>: <div className="loading">...{loadingText[Math.floor(Math.random() * loadingText.length)]}...</div>}
-      {this.state.httpError ? <button id="refresh" onClick={this.handleRefresh}>Try again?</button>: null}
-      <div style={timer}>
-        <div role="timer">Time Elapsed: <span>{this.state.stopwatch}</span></div>
-        {this.state.stopwatch !== '0:00' ? <button id="restart" onClick={this.handleRefresh}>Restart</button>: null}
-        </div>
-      <TextArea
-        id="typingarea"
-        contenteditable
-        autoFocus
-        disabled
-        placeholder="Type here!"
-        spellCheck="false"
-        onChange={ event => this.handleTyping(event) } />
-      {this.state.finished ? <Analysis
-        timeElapsed={this.state.timeElapsed}
-        wordCount={this.state.wordCount}
-        copyText={this.state.copyText}
-        errorCount={this.state.errorCount}/> : null}
-    </>
-    );
+    if (login === undefined) {
+      <Login handleLogin={this.handleLogin}/>
+    } else {
+      return (
+        <>
+        {this.state.copyText.length > 0 ? <CopyText
+          copy={this.state.copyText}
+          input={this.state.typedText}
+          handleErrors={this.handleErrors}/>: <div className="loading">...{loadingText[Math.floor(Math.random() * loadingText.length)]}...</div>}
+        {this.state.httpError ? <button id="refresh" onClick={this.handleRefresh}>Try again?</button>: null}
+        <div style={timer}>
+          <div role="timer">Time Elapsed: <span>{this.state.stopwatch}</span></div>
+          {this.state.stopwatch !== '0:00' ? <button id="restart" onClick={this.handleRefresh}>Restart</button>: null}
+          </div>
+        <TextArea
+          id="typingarea"
+          contenteditable
+          autoFocus
+          disabled
+          placeholder="Type here!"
+          spellCheck="false"
+          onChange={ event => this.handleTyping(event) } />
+        {this.state.finished ? <Analysis
+          timeElapsed={this.state.timeElapsed}
+          wpm={this.state.wpm}
+          copyText={this.state.copyText}
+          errorCount={this.state.errorCount}
+          bestScore={this.state.bestScore}/> : null}
+      </>
+      );
+    }
   }
 }

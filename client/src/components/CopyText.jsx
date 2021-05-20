@@ -22,12 +22,13 @@ export default ({copy, input, handleErrors}) => {
     <div id="copytext">
     {copyArr.map((char, index) => {
       if (inputArr[index] === undefined) {
-        return <span key={index} style={waiting}>{char}</span>
+        return char === '\n' ? <span key={index} style={waiting}>{char}<br/><br/></span>: <span key={index} style={waiting}>{char}</span>
       } else if (char === inputArr[index]) {
-        return <span key={index} style={correct}>{char}</span>
+        return char === '\n' ? <span key={index} style={correct}>{char}<br/><br/></span>: <span key={index} style={correct}>{char}</span>
       } else if (char !== inputArr[index]) {
-        handleErrors(++errors);
-        return <span key={index} style={wrong}>{char}</span>
+        errors++;
+        handleErrors(errors);
+        return char === '\n' ? <span key={index} style={wrong}>{char}<br/><br/></span>: <span key={index} style={wrong}>{char}</span>
       }
     })}
     </div>

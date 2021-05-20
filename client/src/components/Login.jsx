@@ -1,18 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactModal from 'react-modal';
+import NewUser from './NewUser.jsx';
+import Signin from './Signin.jsx';
+import FakeLink from './../styling/FakeLink.jsx';
 
 export default ({ login, handleLogin }) => {
 
+  const [newUser, setNewUser] = useState(false);
+
   const handleQuit = () => {
     handleLogin({login: false});
-  };
-
-  const handleSubmit = (event) => {
-
-  };
-
-  const handleCreate = () => {
-
   };
 
   return (
@@ -20,16 +17,23 @@ export default ({ login, handleLogin }) => {
       isOpen={login === undefined ? true: false}
       onRequestClose={() => handleLogin({login: false})}
       contentLabel={"Login Modal"}
-      id="login"
       appElement={document.getElementById('app')}
       preventScroll={true}>
-
-      <form>
-        Email: <input type="email" />
-        Password: <input type="password" />
-        <button onClick={ event => {handleSubmit(event)}}>Login</button>
-        <button onClick={handleQuit}>Continue As Guest</button>
-      </form>
+      {newUser ?
+        <><h1>Create An Account</h1>
+        <NewUser handleLogin={handleLogin}/>
+        <FakeLink onClick={() => setNewUser(false)}>Sign In</FakeLink>
+        <span> | </span>
+        <FakeLink onClick={handleQuit}>Continue As Guest</FakeLink>
+        </>:
+        <>
+        <h1>Sign In</h1>
+        <Signin handleLogin={handleLogin}/>
+        <FakeLink onClick={() => setNewUser(true)}>Create An Account</FakeLink>
+        <span> | </span>
+        <FakeLink onClick={handleQuit}>Continue As Guest</FakeLink>
+        </>
+      }
 
     </ReactModal>
   );

@@ -5,6 +5,11 @@ export default ({copy, input, handleErrors}) => {
   let copyArr = copy.split('');
   let inputArr = input.split('');
 
+  const copytext = {
+    background: 'white',
+    padding: '10px'
+  }
+
   const waiting = {
     color: 'unset'
   };
@@ -19,7 +24,7 @@ export default ({copy, input, handleErrors}) => {
   let errors = 0;
 
   return (
-    <div id="copytext">
+    <div id="copytext" style={copytext}>
     {copyArr.map((char, index) => {
       if (inputArr[index] === undefined) {
         return char === '\n' ? <span key={index} style={waiting}>{char}<br/><br/></span>: <span key={index} style={waiting}>{char}</span>

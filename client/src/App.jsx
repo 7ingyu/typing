@@ -125,7 +125,7 @@ export default class App extends React.Component {
     let time = `${minutes}:${seconds < 10 ? '0' + seconds: seconds}`
     console.log('time elapsed:', time);
     document.getElementById('restart').focus();
-    let wpm = Math.round(wordCount / (timeElapsed / 60));
+    let wpm = Math.round(this.state.wordCount / (timeElapsed / 60));
 
     let scoreData = {
       wpm: wpm,
@@ -135,7 +135,7 @@ export default class App extends React.Component {
       errorCount: this.state.errorCount,
       timeElapsed: this.state.timeElapsed,
     };
-    if (userId !== undefined) {
+    if (this.state.userId !== undefined) {
       axios.post(`/${this.state.userId}`, scoreData);
     }
     let newHistory = this.state.history;
@@ -227,7 +227,7 @@ export default class App extends React.Component {
     const timer = {
       display: 'grid',
       gridTemplateColumns: '[timer] 20% [button] 10%',
-      margin: '5px 0px'
+      margin: '20px 0px 5px 0px'
     }
 
     const loadingText = ['Generating text', 'Writing copy', 'Inventing lies', 'Wrangling letters', 'Rearranging alphabets', 'Selecting characters', 'Exploring dictionaries']

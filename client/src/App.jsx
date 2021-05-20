@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Login from './components/Login.jsx';
+import Header from './components/Header.jsx';
 import CopyText from './components/CopyText.jsx';
 import Analysis from './components/Analysis.jsx';
 import History from './components/History.jsx';
@@ -215,7 +216,14 @@ export default class App extends React.Component {
   }
 
   handleLogin(userData) {
-    if (userData.login) {
+    if (userData.login === undefined) {
+      this.setState({
+        login: undefined,
+        userId: undefined,
+        history: []
+      })
+      this.handleReset();
+    } else if (userData.login) {
       if (userData.username === undefined) {
         this.checkLogin(userData);
       } else {
@@ -254,6 +262,7 @@ export default class App extends React.Component {
     this.getText();
     clearInterval(this.state.counter);
     this.setState({
+      startTime: 0,
       reset: true,
       stopwatch: '0:00',
       timeElapsed: 0,
@@ -287,6 +296,9 @@ export default class App extends React.Component {
         login={this.state.login}
         loginWarning={this.state.loginWarning}
         handleLogin={this.handleLogin}/>
+
+      <Header login={this.login} handleLogin={this.handleLogin} />
+
       {this.state.copyText.length > 0 ? <CopyText
         copy={this.state.copyText}
         input={this.state.typedText}

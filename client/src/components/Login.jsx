@@ -9,7 +9,6 @@ export default ({ login, loginWarning, handleLogin }) => {
   const [newUser, setNewUser] = useState(false);
 
   const overlay = {
-
   };
 
   const content = {

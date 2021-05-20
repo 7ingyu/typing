@@ -20,6 +20,7 @@ export default ({ handleLogin }) => {
   }
 
   const handleSubmit = (event) => {
+    event.preventDefault();
     if (email.length > 1 && password.length > 1) {
       let userData = {
         login: true,
@@ -28,6 +29,8 @@ export default ({ handleLogin }) => {
       }
       handleLogin(userData);
     }
+    setPassword('');
+    document.getElementById('pass').value = '';
   }
 
   return (

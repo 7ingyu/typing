@@ -4,7 +4,7 @@ import NewUser from './NewUser.jsx';
 import Signin from './Signin.jsx';
 import FakeLink from './../styling/FakeLink.jsx';
 
-export default ({ login, handleLogin }) => {
+export default ({ login, loginWarning, handleLogin }) => {
 
   const [newUser, setNewUser] = useState(false);
 
@@ -26,6 +26,13 @@ export default ({ login, handleLogin }) => {
     justifyContent: 'space-evenly'
   }
 
+  const warning = {
+    height: '1.5em',
+    fontWeight: '300',
+    color: 'red',
+    textAlign: 'center'
+  }
+
   const handleQuit = () => {
     handleLogin({login: false});
   };
@@ -40,14 +47,16 @@ export default ({ login, handleLogin }) => {
       style={{ overlay: overlay, content: content }}>
       {newUser ?
         <><h1>Sign Up</h1>
-        <NewUser handleLogin={handleLogin}/> <br/>
+        <NewUser handleLogin={handleLogin}/>
+        <div style={warning}>{loginWarning}</div>
         <div style={bottom}><FakeLink onClick={() => setNewUser(false)}>Sign In</FakeLink>
         <span> | </span>
         <FakeLink onClick={handleQuit}>Continue As Guest</FakeLink></div>
         </>:
         <>
         <h1>Sign In</h1>
-        <Signin handleLogin={handleLogin}/> <br/>
+        <Signin handleLogin={handleLogin}/>
+        <div style={warning}>{loginWarning}</div>
         <div style={bottom}><FakeLink onClick={() => setNewUser(true)}>Create An Account</FakeLink>
         <span> | </span>
         <FakeLink onClick={handleQuit}>Continue As Guest</FakeLink></div>

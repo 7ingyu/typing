@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Login from './components/Login.jsx';
 import CopyText from './components/CopyText.jsx';
 import Analysis from './components/Analysis.jsx';
+import History from './components/History.jsx';
 import TextArea from './styling/TextArea.jsx';
 
 import axios from 'axios';
@@ -12,6 +13,7 @@ export default class App extends React.Component {
     this.state = {
       userId: undefined,
       login: undefined,
+      loginWarning: '',
       history: [],
       httpError: false,
       timeElapsed: 0,
@@ -33,6 +35,7 @@ export default class App extends React.Component {
     this.startCounter = this.startCounter.bind(this);
     this.timeIncrement = this.timeIncrement.bind(this);
     this.endGame = this.endGame.bind(this);
+    this.checkLogin = this.checkLogin.bind(this);
     this.handleLogin = this.handleLogin.bind(this);
     this.handleTyping = this.handleTyping.bind(this);
     this.handleReset = this.handleReset.bind(this);
@@ -53,6 +56,9 @@ export default class App extends React.Component {
       return true;
     }
     if (this.state.login !== nextState.login) {
+      return true;
+    }
+    if (this.state.loginWarning !== nextState.loginWarning) {
       return true;
     }
     return false;
@@ -91,7 +97,7 @@ export default class App extends React.Component {
   }
 
   startCounter() {
-    let timeAtStart = Math.floor(Date.now() / 1000);
+    let timeAtStart = new Date();
     let counter = setInterval(this.timeIncrement, 1000);
 
     this.setState({
@@ -116,10 +122,10 @@ export default class App extends React.Component {
 
   endGame() {
     clearInterval(this.state.counter);
-    let timeAtEnd = Math.floor(Date.now() / 1000);
+    let timeAtEnd = new Date();
     let textbox = document.getElementById('typingarea');
     textbox.disabled = true;
-    let timeElapsed = timeAtEnd - this.state.startTime;
+    let timeElapsed = (timeAtEnd - this.state.startTime) /1000;
     let minutes = Math.floor(timeElapsed / 60);
     let seconds = timeElapsed - (minutes * 60);
     let time = `${minutes}:${seconds < 10 ? '0' + seconds: seconds}`
@@ -130,16 +136,17 @@ export default class App extends React.Component {
     let scoreData = {
       wpm: wpm,
       wordCount: this.state.wordCount,
-      startTime: this.state.startTime,
-      endTime: this.state.endTime,
-      errorCount: this.state.errorCount,
-      timeElapsed: this.state.timeElapsed,
+      start: this.state.startTime,
+      end: timeAtEnd,
+      errors: this.state.errorCount === 1 ? 0: Math.ceil(this.state.errorCount / this.state.copyText.length * 100),
+      elapsed: this.state.timeElapsed,
+      perfect: this.state.errorCount === 0 ? true: false
     };
     if (this.state.userId !== undefined) {
       axios.post(`/${this.state.userId}`, scoreData);
     }
-    let newHistory = this.state.history;
-    newHistory.push(scoreData);
+    let newHistory = [scoreData]
+    newHistory = newHistory.concat(this.state.history);
 
     this.setState({
       wpm: wpm,
@@ -152,37 +159,67 @@ export default class App extends React.Component {
     });
   }
 
-  handleLogin = (userData) => {
-    console.log(userData)
-    if (userData.login) {
-      if (userData.username === undefined) {
-        axios
-        .get(`/login`, {params: userData})
-        .then((res) => {
+  checkLogin(userData) {
+    // HASH THE PASSWORD
+    let auth = {Authorization: `{"email": "${userData.email}", "password": "${userData.password}"}`}
+    axios
+      .get(`/login`, {headers: auth})
+      .then((res) => {
+        if (typeof res.data === 'string') {
+          this.setState({
+            loginWarning: res.data
+          })
+        } else {
+          // ADD GET BEST SCORE
           this.setState({
             login: true,
             userId: res.data.id,
             history: res.data.history,
-            username: res.data.username
-          })
-        })
-        .then(() => {
+            username: res.data.username,
+            loginWarning: ''
+          });
           this.getText();
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        this.setState({
+          loginWarning: 'Incorrect email and/or password'
         })
-        .catch((err) => {
-          console.log(err);
-          // Print an error message and make them login again
-        });
-      } else {
-        axios
-          .post(`/signup`, userData)
-          .then((res) => {
-            this.setState({
-              login: true,
-              userId: res.data.id,
-              username: userData.username
-            })
+      });
+  }
+
+  signup(userData) {
+    axios
+      .post(`/signup`, userData)
+      .then((res) => {
+        if (res.data.user_id !== undefined) {
+          this.setState({
+            login: true,
+            userId: res.data.user_id,
+            username: userData.username
+          });
+          this.getText();
+        } else {
+          this.setState({
+            loginWarning: 'Email already registered'
           })
+        }
+      })
+      .catch(() => {
+        console.log(err);
+        this.setState({
+          loginWarning: 'Error creating account'
+        })
+      })
+  }
+
+  handleLogin(userData) {
+    if (userData.login) {
+      if (userData.username === undefined) {
+        this.checkLogin(userData);
+      } else {
+        this.signup(userData);
       }
     } else {
       this.setState({
@@ -222,6 +259,7 @@ export default class App extends React.Component {
       timeElapsed: 0,
       finished: false,
       timeStarted: false,
+      errorCount: 0
     })
   };
 
@@ -238,8 +276,6 @@ export default class App extends React.Component {
   render() {
 
     const timer = {
-      display: 'grid',
-      gridTemplateColumns: '[timer] 2fr [span] 1fr[button] 1fr',
       margin: '20px 0px 5px 0px'
     }
 
@@ -249,6 +285,7 @@ export default class App extends React.Component {
       <>
       <Login
         login={this.state.login}
+        loginWarning={this.state.loginWarning}
         handleLogin={this.handleLogin}/>
       {this.state.copyText.length > 0 ? <CopyText
         copy={this.state.copyText}
@@ -257,8 +294,7 @@ export default class App extends React.Component {
       {this.state.httpError ? <button id="refresh" onClick={this.handleRefresh}>Try again?</button>: null}
 
       <div style={timer}>
-        <div role="timer">Time Elapsed: <span>{this.state.stopwatch}</span></div><span></span>
-        {this.state.stopwatch !== '0:00' ? <button id="restart" onClick={this.handleRefresh}>Restart</button>: null}
+        <div role="timer">Time Elapsed: <span>{this.state.stopwatch}</span></div>
       </div>
 
       <TextArea
@@ -269,12 +305,17 @@ export default class App extends React.Component {
         placeholder="Type here!"
         spellCheck="false"
         onChange={ event => this.handleTyping(event) } />
+
+      {this.state.stopwatch !== '0:00' ? <button id="restart" onClick={this.handleReset}>Restart</button>: null}
+
       {this.state.finished ? <Analysis
         timeElapsed={this.state.timeElapsed}
         wpm={this.state.wpm}
         copyText={this.state.copyText}
         errorCount={this.state.errorCount}
         bestScore={this.state.bestScore}/> : null}
+
+      {this.state.history.length > 0 ? <History history={this.state.history} />: null}
     </>
     );
   }

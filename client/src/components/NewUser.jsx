@@ -19,16 +19,25 @@ export default ({ handleLogin }) => {
       } else {
         setUsername(event.target.value);
       }
+    } else {
+      if (event.target.name === 'email') {
+        setEmail('');
+      } else if (event.target.name === 'password') {
+        setPassword('');
+      } else {
+        setUsername('');
+      }
     }
   }
 
   const handleSubmit = (event) => {
+    event.preventDefault();
     if (email.length > 1 && password.length > 1 && username.length > 1) {
       let userData = {
         login: true,
         email: email,
         password: password,
-        username: username
+        username: username,
       }
       handleLogin(userData);
     }
@@ -36,7 +45,7 @@ export default ({ handleLogin }) => {
 
   return (
     <form id="signup" style={formstyles}>
-      Username: <input
+      Display Name: <input
         name="user"
         type="text"
         id="newusername"

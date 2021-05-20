@@ -28,10 +28,11 @@ export default ({copy, input, handleErrors}) => {
     {copyArr.map((char, index) => {
       if (inputArr[index] === undefined) {
         return char === '\n' ? <span key={index} style={waiting}>{char}<br/><br/></span>: <span key={index} style={waiting}>{char}</span>
-      } else if (char === inputArr[index]) {
+      } else if (char === inputArr[index] || char === '\n' || char === '\r') {
         return char === '\n' ? <span key={index} style={correct}>{char}<br/><br/></span>: <span key={index} style={correct}>{char}</span>
       } else if (char !== inputArr[index]) {
         errors++;
+        console.log(inputArr[index], 'should be', char)
         handleErrors(errors);
         return char === '\n' ? <span key={index} style={wrong}>{char}<br/><br/></span>: <span key={index} style={wrong}>{char}</span>
       }

@@ -32,32 +32,70 @@ app.get('/copy', async (req, res, next) => {
 
 })
 
-app.get('/signin', async (req, res, next) => {
-  let userData = req.body;
+app.get('/login', async (req, res, next) => {
+  let userData = JSON.parse(req.headers.authorization);
+  console.log(userData);
 
-  let query = {
-    text: 'SELECT (pswhash = crypt($1, pswhash) AS pswmatch FROM users WHERE email=$2',
+  let responseObj = {
+    id: null,
+    username: null,
+    history: null
+  }
+
+  const passwordQuery = {
+    text: `SELECT user_id, username, (pswhash = crypt($1, pswhash)) AS pswmatch FROM users WHERE email=$2`,
     values: [userData.password, userData.email]
   }
 
-  const response = await pool.query(query);
-  console.log(response);
+  let { rows } = await pool.query(passwordQuery);
 
-  res.send(response);
+  if (rows.length === 0) {
+    res.send('No such user');
+  } else if (rows[0].pswmatch) {
+    responseObj.id = rows[0].user_id;
+    responseObj.username = rows[0].username;
+
+    const histQuery = {
+      text: `SELECT * FROM scores WHERE user_id=$1 ORDER BY start DESC`,
+      values: [responseObj.id]
+    }
+
+    let data = await pool.query(histQuery);
+
+    responseObj.history = data.rows;
+    res.send(responseObj);
+  } else {
+    res.send('Incorrent email and/or password');
+  }
 });
 
-app.post('/newuser', async (req, res, next) => {
+app.post('/signup', async (req, res, next) => {
   let userData = req.body;
 
-  let query = {
-    text: "INSERT INTO users (username, pswhash, email) VALUES($1, crypt($2, gen_salt('bf')), $3)",
+  const query = {
+    text: "INSERT INTO users (username, pswhash, email) VALUES($1, crypt($2, gen_salt('bf')), $3) RETURNING user_id",
     values: [userData.username, userData.password, userData.email]
   }
 
-  const response = await pool.query(query);
-  console.log(response);
+  try {
+    const response = await pool.query(query);
+    res.send(response.rows[0]);
+  } catch (err) {
+    res.send('Email already registerd');
+  }
+})
 
-  res.send(response);
+app.post('/:userid', async (req, res, next) => {
+  let id = req.params.userid;
+  let score = req.body;
+
+  let query = {
+    text: `INSERT INTO scores(user_id, wpm, start, "end", elapsed, errors, perfect) VALUES($1, $2, $3, $4, $5, $6, $7)`,
+    values: [id, score.wpm, new Date(score.start), new Date(score.end), score.elapsed, score.errors, score.perfect]
+  }
+
+  await pool.query(query);
+  res.send('Ok');
 })
 
 app.listen(port, async () => {

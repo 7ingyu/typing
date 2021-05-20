@@ -1,13 +1,17 @@
 import React from 'react';
 import ReactModal from 'react-modal';
 
-export default ({ login, handleLogin } => {
+export default ({ login, handleLogin }) => {
 
-  handleQuit = () => {
+  const handleQuit = () => {
     handleLogin({login: false});
   };
 
-  handleSubmit = (event) => {
+  const handleSubmit = (event) => {
+
+  };
+
+  const handleCreate = () => {
 
   };
 
@@ -16,7 +20,8 @@ export default ({ login, handleLogin } => {
       isOpen={login === undefined ? true: false}
       onRequestClose={() => handleLogin({login: false})}
       contentLabel={"Login Modal"}
-      id={"login"}
+      id="login"
+      appElement={document.getElementById('app')}
       preventScroll={true}>
 
       <form>
@@ -27,6 +32,6 @@ export default ({ login, handleLogin } => {
       </form>
 
     </ReactModal>
-  )
-})
+  );
+}
 

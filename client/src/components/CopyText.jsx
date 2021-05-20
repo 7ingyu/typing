@@ -7,7 +7,7 @@ export default ({copy, input, handleErrors}) => {
 
   const copytext = {
     background: 'white',
-    padding: '10px'
+    padding: '3vw'
   }
 
   const waiting = {

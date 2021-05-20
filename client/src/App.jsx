@@ -155,13 +155,15 @@ export default class App extends React.Component {
   handleLogin = (userData) => {
     console.log(userData)
     if (userData.login) {
-      axios
-        .get(`${userData.email}`)
+      if (userData.username === undefined) {
+        axios
+        .get(`/login`, {params: userData})
         .then((res) => {
           this.setState({
             login: true,
-            userId: userData.id,
+            userId: res.data.id,
             history: res.data.history,
+            username: res.data.username
           })
         })
         .then(() => {
@@ -171,6 +173,17 @@ export default class App extends React.Component {
           console.log(err);
           // Print an error message and make them login again
         });
+      } else {
+        axios
+          .post(`/signup`, userData)
+          .then((res) => {
+            this.setState({
+              login: true,
+              userId: res.data.id,
+              username: userData.username
+            })
+          })
+      }
     } else {
       this.setState({
         login: false
@@ -226,7 +239,7 @@ export default class App extends React.Component {
 
     const timer = {
       display: 'grid',
-      gridTemplateColumns: '[timer] 20% [button] 10%',
+      gridTemplateColumns: '[timer] 2fr [span] 1fr[button] 1fr',
       margin: '20px 0px 5px 0px'
     }
 
@@ -242,10 +255,12 @@ export default class App extends React.Component {
         input={this.state.typedText}
         handleErrors={this.handleErrors}/>: <div className="loading">...{loadingText[Math.floor(Math.random() * loadingText.length)]}...</div>}
       {this.state.httpError ? <button id="refresh" onClick={this.handleRefresh}>Try again?</button>: null}
+
       <div style={timer}>
-        <div role="timer">Time Elapsed: <span>{this.state.stopwatch}</span></div>
+        <div role="timer">Time Elapsed: <span>{this.state.stopwatch}</span></div><span></span>
         {this.state.stopwatch !== '0:00' ? <button id="restart" onClick={this.handleRefresh}>Restart</button>: null}
-        </div>
+      </div>
+
       <TextArea
         id="typingarea"
         contenteditable

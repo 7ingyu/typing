@@ -5,9 +5,13 @@ export default ({ handleLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  const formstyles = {
+    display: 'grid'
+  };
+
   const handleChange = (event) => {
     if (event.target.validity.valid) {
-      if (event.target.name === email) {
+      if (event.target.name === 'email') {
         setEmail(event.target.value);
       } else {
         setPassword(event.target.value)
@@ -27,7 +31,7 @@ export default ({ handleLogin }) => {
   }
 
   return (
-    <form id="login">
+    <form id="login" style={formstyles}>
       Email: <input
         name="email"
         type="email"
@@ -40,6 +44,7 @@ export default ({ handleLogin }) => {
         id="pass"
         required
         onChange={event => {handleChange(event)}}/>
+      <br />
       <button onClick={ event => {handleSubmit(event)}}>Login</button>
     </form>
   );

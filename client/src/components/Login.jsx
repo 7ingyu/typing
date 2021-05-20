@@ -8,6 +8,24 @@ export default ({ login, handleLogin }) => {
 
   const [newUser, setNewUser] = useState(false);
 
+  const overlay = {
+
+  };
+
+  const content = {
+    maxWidth: '350px',
+    width: '95vw',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    top: '5%'
+  };
+
+  const bottom = {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-evenly'
+  }
+
   const handleQuit = () => {
     handleLogin({login: false});
   };
@@ -18,20 +36,21 @@ export default ({ login, handleLogin }) => {
       onRequestClose={() => handleLogin({login: false})}
       contentLabel={"Login Modal"}
       appElement={document.getElementById('app')}
-      preventScroll={true}>
+      preventScroll={true}
+      style={{ overlay: overlay, content: content }}>
       {newUser ?
-        <><h1>Create An Account</h1>
-        <NewUser handleLogin={handleLogin}/>
-        <FakeLink onClick={() => setNewUser(false)}>Sign In</FakeLink>
+        <><h1>Sign Up</h1>
+        <NewUser handleLogin={handleLogin}/> <br/>
+        <div style={bottom}><FakeLink onClick={() => setNewUser(false)}>Sign In</FakeLink>
         <span> | </span>
-        <FakeLink onClick={handleQuit}>Continue As Guest</FakeLink>
+        <FakeLink onClick={handleQuit}>Continue As Guest</FakeLink></div>
         </>:
         <>
         <h1>Sign In</h1>
-        <Signin handleLogin={handleLogin}/>
-        <FakeLink onClick={() => setNewUser(true)}>Create An Account</FakeLink>
+        <Signin handleLogin={handleLogin}/> <br/>
+        <div style={bottom}><FakeLink onClick={() => setNewUser(true)}>Create An Account</FakeLink>
         <span> | </span>
-        <FakeLink onClick={handleQuit}>Continue As Guest</FakeLink>
+        <FakeLink onClick={handleQuit}>Continue As Guest</FakeLink></div>
         </>
       }
 

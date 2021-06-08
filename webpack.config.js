@@ -3,7 +3,7 @@ const path = require('path');
 module.exports = {
   mode: 'development',
   watch: true,
-  entry: path.resolve(__dirname, 'client', 'src'),
+  entry: './client/src/index.jsx',
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'client', 'dist'),
@@ -12,10 +12,7 @@ module.exports = {
     rules: [
       {
         test: /\.jsx?$/,
-        loader: 'babel-loader',
-        options: {
-          presets: ['@babel/preset-react', '@babel/preset-env']
-        }
+        loader: 'babel-loader'
       }
     ]
   }
